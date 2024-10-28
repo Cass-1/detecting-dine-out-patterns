@@ -14,8 +14,10 @@ spans.
 # Setup
 ## Data
 Copy the data from the shared OneDrive into a folder titled "data" in the root of the repo
+```txt
 |
 |-- data/
 |-- src/
 |-- LICENSE
 |-- README.md
+```
