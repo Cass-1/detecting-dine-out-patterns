@@ -11,3 +11,6 @@ spans.
   - Identify restaurant visits based on the combined data and defined visit parameters.
   - Calculate the duration of each visit.
   - Analyze and report on dine-out patterns based on the results.
+# Setup
+## Data
+Copy the data from the shared OneDrive into the /data folder
