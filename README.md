@@ -13,4 +13,9 @@ spans.
   - Analyze and report on dine-out patterns based on the results.
 # Setup
 ## Data
-Copy the data from the shared OneDrive into the /data folder
+Copy the data from the shared OneDrive into a folder titled "data" in the root of the repo
+|
+|-- data/
+|-- src/
+|-- LICENSE
+|-- README.md
