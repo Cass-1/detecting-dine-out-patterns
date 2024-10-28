@@ -32,4 +32,4 @@ Copy the data from the shared OneDrive into a folder titled "data" in the root o
 
 ## Environment
 
-Use a conda python environment
+Connect to the devcontainer
