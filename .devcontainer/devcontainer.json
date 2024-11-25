@@ -28,7 +28,7 @@
     // "forwardPorts": [],
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "python3 -m venv .venv && . .venv/bin/activate && pip install --upgrade pip && pip install -r src/requirements.txt",
+    "postCreateCommand": "python3 -m venv .venv && . .venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt",
 
     // Configure tool-specific properties.
     // "customizations": {},
@@ -42,14 +42,16 @@
         "vscode": {
             "settings": {
                 "python.terminal.activateEnvInCurrentTerminal": true,
-                "python.defaultInterpreterPath": ".venv/bin/python"
+                "python.defaultInterpreterPath": ".venv/bin/python",
+                "material-icon-theme.folders.theme": "classic"
             },
             "extensions": [
                 "mechatroner.rainbow-csv",
                 "eamodio.gitlens",
                 "ms-toolsai.jupyter",
                 "GitHub.copilot",
-                "GitHub.copilot-chat"
+                "GitHub.copilot-chat",
+                "PKief.material-icon-theme"
             ]
         }
     }
