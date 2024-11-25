@@ -6,8 +6,7 @@ from io import StringIO
 from haversine import haversine_vector, haversine
 
 # Add the src directory to the Python path
-# sys.path.insert(0, '/workspaces/detecting-dine-out-patterns/src')
-# from util.average_distance_between_rows import average_distance_between_rows
+sys.path.insert(0, '/workspaces/detecting-dine-out-patterns/src')
 
 import util
 
@@ -33,7 +32,7 @@ class TestAverageDistance(unittest.TestCase):
         self.assertAlmostEqual(distance, 111.178, places=3)
 
     def test_average_distance(self):
-        average_dist = util.average_distance_between_rows(self.df)
+        average_dist = util.distance.average_distance_between_rows(self.df)
         self.assertAlmostEqual(average_dist, 111.178, places=3)
 
 if __name__ == '__main__':
