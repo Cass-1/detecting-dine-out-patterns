@@ -18,18 +18,18 @@ duration of each potential visit.
 
 # Setup
 
-## Data
+#### 1. Clone the repo
+#### 2. Open in dev container
+![alt text](.documentation-images/image.png)
+#### 3. Wait until all dependencies are installed
+![alt text](.documentation-images/image-0.png)
+#### 4. Click Run All
+![alt text](.documentation-images/image-1.png)
+#### 5. Select Python Environments...
+![alt text](.documentation-images/image-2.png)
+#### 6. Select .venv
+![alt text](.documentation-images/image-3.png)
+#### 7. Select Install
+![alt text](.documentation-images/image-4.png)
+#### 8. You're done!
 
-Copy the data from the shared OneDrive into a folder titled "data" in the root of the repo
-
-```txt
-|
-|-- data/
-|-- src/
-|-- LICENSE
-|-- README.md
-```
-
-## Environment
-
-Connect to the devcontainer
