@@ -1,0 +1,97 @@
+# %% [markdown]
+# # Distance Analysis
+
+# %%
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from haversine import haversine_vector
+
+# Load the data
+file_path = '../../data/movements.csv'
+movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
+
+# Define functions
+def get_distance_between_rows(df):
+    """
+    Calculate the Haversine distance between consecutive rows in a DataFrame (in kilometers)
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing 'latitude' and 'longitude' columns.
+    Returns:
+    numpy.ndarray: Array of distances between consecutive rows.
+    """
+    
+    coords1 = df[['latitude', 'longitude']].values[:-1]
+    coords2 = df[['latitude', 'longitude']].values[1:]
+    distances = haversine_vector(coords1, coords2)
+    return distances
+
+# check
+def get_time_between_rows(df):
+    """
+    Calculate the time difference between consecutive rows in a DataFrame (in hours)
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing a 'datetime' column with date and time information.
+    Returns: numpy.ndarray: Array of time differences between consecutive rows.
+    """
+
+    date = pd.to_datetime(df['datetime'])
+    datetime1 = date.values[:-1]
+    datetime2 = date.values[1:]
+    difference = (datetime2 - datetime1).astype('timedelta64[s]')
+    getHours = np.vectorize(lambda x: x / np.timedelta64(1, 'h'))
+    return getHours(difference)
+
+# Calculate distances and times
+distance_results = pd.DataFrame()
+time_results = pd.DataFrame()
+grouped = movements_data.groupby('id')
+
+for name, group in grouped:
+    distances = (get_distance_between_rows(group)) # Convert to meters
+    times = get_time_between_rows(group)
+    distance_results[name] = pd.Series(distances)
+    time_results[name] = pd.Series(times)
+
+# Perform element-wise division
+velocity_results = distance_results / time_results
+velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
+
+
+# %%
+print(distance_results.apply(lambda x: x.describe()))
+
+# %%
+n_1 = 1
+n_2 = 1
+# Plot the velocity results for each id in separate graphs with downsampling and rolling averages
+for col in velocity_results.columns:
+    plt.figure(figsize=(10, 3))
+    
+    # Downsample by plotting every 5000th point
+    downsampled_data = velocity_results[col].iloc[:10000:]
+    
+    # Calculate rolling average with a window of 1000 points
+    # rolling_avg = velocity_results[col].rolling(window=n_2).mean()
+    
+    plt.plot(downsampled_data.index, downsampled_data, linestyle='-', label=f'{col}')
+    # plt.plot(rolling_avg.index, rolling_avg, linestyle='-', color='red', label=f'{col} (Rolling Avg)')
+    
+    # Add labels and title
+    plt.xlabel('Index')
+    plt.ylabel('Velocity (km/hr)')
+    plt.title(f'Velocity Over Time for {col}')
+    plt.legend()
+    
+    # Show the plot
+    plt.show()
+
+# %%
+
+# Find how often values of less than 1 occur
+less_than_one_counts = (velocity_results < 1).sum()
+
+# Display the counts
+print(less_than_one_counts)
+
+
