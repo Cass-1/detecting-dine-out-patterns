@@ -1,6 +1,9 @@
 # %% [markdown]
 # # Distance Analysis
 
+# %% [markdown]
+# #### Get Data
+
 # %%
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -42,24 +45,66 @@ def get_time_between_rows(df):
     getHours = np.vectorize(lambda x: x / np.timedelta64(1, 'h'))
     return getHours(difference)
 
-# Calculate distances and times
-distance_results = pd.DataFrame()
-time_results = pd.DataFrame()
+# %%
+# Load the data
+file_path = '../../data/movements.csv'
+movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
+
+# %%
+# get distance and time between each measurement
 grouped = movements_data.groupby('id')
+distance_dict = {}
+time_dict = {}
 
 for name, group in grouped:
-    distances = (get_distance_between_rows(group)) # Convert to meters
+    distances = get_distance_between_rows(group)
     times = get_time_between_rows(group)
-    distance_results[name] = pd.Series(distances)
-    time_results[name] = pd.Series(times)
+    distance_dict[name] = distances
+    time_dict[name] = times
 
-# Perform element-wise division
+# replaces missing items w/ NaN
+distance_results = pd.DataFrame({ key:pd.Series(value) for key, value in distance_dict.items() })
+time_results = pd.DataFrame({ key:pd.Series(value) for key, value in time_dict.items() })
+
+# %%
+# get velocity
 velocity_results = distance_results / time_results
 velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
 
+# %% [markdown]
+# #### Missing Values
 
 # %%
-print(distance_results.apply(lambda x: x.describe()))
+missing_movement_data = pd.DataFrame()
+missing_movement_data['latitude'] = grouped['latitude'].apply(lambda x: x.isna().sum())
+missing_movement_data['longitude'] = grouped['latitude'].apply(lambda x: x.isna().sum())
+
+missing_movement_data.head(10)
+
+# %%
+# verify all missing values are due to lengths
+length = distance_results.notna().sum().reset_index()
+length.columns = ['id', 'length']
+length['distance_from_max'] = length['length'] - length['length'].max()
+
+length['distance_results_na'] = distance_results.isna().sum().values
+length['time_results_na'] = time_results.isna().sum().values
+
+length.head(10)
+
+
+# %%
+print(distance_results.apply(lambda x: x.isna().sum()))
+print(time_results.apply(lambda x: x.isna().sum()))
+
+# %% [markdown]
+# #### Summary Stats
+
+# %%
+distance_results.apply(lambda x: x.describe())
+
+# %% [markdown]
+# #### Graphs
 
 # %%
 n_1 = 1
