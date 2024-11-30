@@ -9,10 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from haversine import haversine_vector
-
-# Load the data
-file_path = '../../data/movements.csv'
-movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
+import seaborn as sns
 
 # Define functions
 def get_distance_between_rows(df):
@@ -131,12 +128,51 @@ for col in velocity_results.columns:
     # Show the plot
     plt.show()
 
+# %% [markdown]
+# #### Movement Distributions
+
 # %%
+# Flatten the DataFrame to a Series for plotting
+distance_series = distance_results['I000']
 
-# Find how often values of less than 1 occur
-less_than_one_counts = (velocity_results < 1).sum()
+for col in distance_results.columns:
+    # Plot the histogram with logarithmic scaling
+    sns.histplot(distance_results[col], bins=100, log_scale=(True, False))
 
-# Display the counts
-print(less_than_one_counts)
+    # Add labels and title
+    plt.xlabel(f'Distance Traveled by {col}(km)')
+    plt.ylabel('Frequency')
+    plt.title(f'Distribution of Distances for {col}')
+
+    # Show the plot
+    plt.show()
+
+
+# %%
+for col in distance_results.columns:
+    # Plot the histogram with logarithmic scaling
+    sns.histplot([distance for distance in distance_results[col] if distance > 10], bins=100, log_scale=(True, False))
+    
+
+    # Add labels and title
+    plt.xlabel(f'Distance Traveled by {col} > 10(km)')
+    plt.ylabel('Frequency')
+    plt.title(f'Distribution of Distances for {col}')
+
+    # Show the plot
+    plt.show()
+
+# my_series = distance_series[distance_series > 10]
+
+# # Plot the histogram with logarithmic scaling
+# sns.histplot(my_series, bins=100)
+
+# # Add labels and title
+# plt.xlabel('Distance greater than 10(km)')
+# plt.ylabel('Frequency')
+# plt.title('Distribution of Distances')
+
+# # Show the plot
+# plt.show()
 
 
