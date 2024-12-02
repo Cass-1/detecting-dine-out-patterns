@@ -70,7 +70,7 @@ velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.column
 
 # %%
 # get low movement
-LOW_MOVEMENT_BOUND = 1 / 1000
+LOW_MOVEMENT_BOUND = 0.007826 # determined by 25% of data in distance_results
 low_movement = pd.DataFrame()
 for col in distance_results.columns:
     low_movement[col] = pd.Series([distance for distance in distance_results[col] if distance < LOW_MOVEMENT_BOUND])
@@ -109,6 +109,10 @@ distance_results.apply(lambda x: x.describe())
 
 # %%
 velocity_results.apply(lambda x: x.describe())
+
+# %%
+low_movement_in_meters = low_movement * 1000
+low_movement_in_meters.apply(lambda x: x.describe())
 
 # %% [markdown]
 # #### Sleep
@@ -153,6 +157,7 @@ def longest_stretch_no_movement(df, threshold, movements_data):
     
     return longest_stretch, stretch_timestamps, stretch_durations
 
+SLEEP_UPPER_BOUND = 0.5 / 1000
 # Find the longest stretch of no movement for each individual, their timestamps, and durations
 longest_stretch_no_movement_results, stretch_timestamps, stretch_durations = longest_stretch_no_movement(distance_results, LOW_MOVEMENT_BOUND, movements_data)
 
