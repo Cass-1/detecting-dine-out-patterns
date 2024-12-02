@@ -69,7 +69,11 @@ velocity_results = distance_results / time_results
 velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
 
 # %%
-
+# get low movement
+LOW_MOVEMENT_BOUND = 1 / 1000
+low_movement = pd.DataFrame()
+for col in distance_results.columns:
+    low_movement[col] = pd.Series([distance for distance in distance_results[col] if distance < LOW_MOVEMENT_BOUND])
 
 # %% [markdown]
 # #### Missing Values
@@ -105,6 +109,62 @@ distance_results.apply(lambda x: x.describe())
 
 # %%
 velocity_results.apply(lambda x: x.describe())
+
+# %% [markdown]
+# #### Sleep
+
+# %%
+def longest_stretch_no_movement(df, threshold, movements_data):
+    """input in seconds and km"""
+    longest_stretch = {}
+    stretch_timestamps = {}
+    stretch_durations = {}
+    
+    for col in df.columns:
+        small_movement = df[col] < threshold
+        max_stretch = 0
+        current_stretch = 0
+        start_index = 0
+        end_index = 0
+        
+        for i, movement in enumerate(small_movement):
+            if movement:
+                if current_stretch == 0:
+                    current_start_index = i
+                current_stretch += 1
+            else:
+                if current_stretch > max_stretch:
+                    max_stretch = current_stretch
+                    start_index = current_start_index
+                    end_index = i - 1
+                current_stretch = 0
+        
+        # Check the last stretch
+        if current_stretch > max_stretch:
+            max_stretch = current_stretch
+            start_index = current_start_index
+            end_index = len(small_movement) - 1
+        
+        longest_stretch[col] = max_stretch
+        start_time = movements_data.iloc[start_index]['datetime']
+        end_time = movements_data.iloc[end_index]['datetime']
+        stretch_timestamps[col] = (start_time, end_time)
+        stretch_durations[col] = (end_time - start_time).total_seconds() / 3600  # duration in hours
+    
+    return longest_stretch, stretch_timestamps, stretch_durations
+
+# Find the longest stretch of no movement for each individual, their timestamps, and durations
+longest_stretch_no_movement_results, stretch_timestamps, stretch_durations = longest_stretch_no_movement(distance_results, LOW_MOVEMENT_BOUND, movements_data)
+
+# Turn the results into a DataFrame
+longest_stretch_df = pd.DataFrame({
+    'Longest Stretch (no movement)': longest_stretch_no_movement_results,
+    'Start Time': {k: v[0] for k, v in stretch_timestamps.items()},
+    'End Time': {k: v[1] for k, v in stretch_timestamps.items()},
+    'Duration (hours)': stretch_durations
+})
+
+longest_stretch_df.head(10)
 
 # %% [markdown]
 # #### Graphs
@@ -191,6 +251,23 @@ for col in velocity_results.columns:
 
     # Add labels and title
     plt.xlabel(f'Distance Traveled by {col}(km)')
+    plt.ylabel('Frequency')
+    plt.title(f'Distribution of Distances for {col}')
+
+    # Show the plot
+    plt.show()
+
+# %% [markdown]
+# ##### Stillness
+
+# %%
+for col in low_movement.columns:
+    # Plot the histogram with logarithmic scaling
+    sns.histplot([distance for distance in low_movement[col]], bins=100)
+    
+
+    # Add labels and title
+    plt.xlabel(f'Distance Traveled by {col} < ${LOW_MOVEMENT_BOUND}(m)')
     plt.ylabel('Frequency')
     plt.title(f'Distribution of Distances for {col}')
 
