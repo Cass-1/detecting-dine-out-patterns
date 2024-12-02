@@ -68,6 +68,9 @@ time_results = pd.DataFrame({ key:pd.Series(value) for key, value in time_dict.i
 velocity_results = distance_results / time_results
 velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
 
+# %%
+
+
 # %% [markdown]
 # #### Missing Values
 
@@ -100,8 +103,14 @@ print(time_results.apply(lambda x: x.isna().sum()))
 # %%
 distance_results.apply(lambda x: x.describe())
 
+# %%
+velocity_results.apply(lambda x: x.describe())
+
 # %% [markdown]
 # #### Graphs
+
+# %% [markdown]
+# ##### Velocity Over Time
 
 # %%
 n_1 = 1
@@ -110,7 +119,7 @@ n_2 = 1
 for col in velocity_results.columns:
     plt.figure(figsize=(10, 3))
     
-    # Downsample by plotting every 5000th point
+    # first 10,000 points
     downsampled_data = velocity_results[col].iloc[:10000:]
     
     # Calculate rolling average with a window of 1000 points
@@ -129,12 +138,9 @@ for col in velocity_results.columns:
     plt.show()
 
 # %% [markdown]
-# #### Movement Distributions
+# ##### Movement Distributions
 
 # %%
-# Flatten the DataFrame to a Series for plotting
-distance_series = distance_results['I000']
-
 for col in distance_results.columns:
     # Plot the histogram with logarithmic scaling
     sns.histplot(distance_results[col], bins=100, log_scale=(True, False))
@@ -146,7 +152,6 @@ for col in distance_results.columns:
 
     # Show the plot
     plt.show()
-
 
 # %%
 for col in distance_results.columns:
@@ -162,17 +167,34 @@ for col in distance_results.columns:
     # Show the plot
     plt.show()
 
-# my_series = distance_series[distance_series > 10]
+# %%
+for col in distance_results.columns:
+    # Plot the histogram with logarithmic scaling
+    sns.histplot([distance for distance in distance_results[col] if distance < 3], bins=100, log_scale=(True, False))
+    
 
-# # Plot the histogram with logarithmic scaling
-# sns.histplot(my_series, bins=100)
+    # Add labels and title
+    plt.xlabel(f'Distance Traveled by {col} > 10(km)')
+    plt.ylabel('Frequency')
+    plt.title(f'Distribution of Distances for {col}')
 
-# # Add labels and title
-# plt.xlabel('Distance greater than 10(km)')
-# plt.ylabel('Frequency')
-# plt.title('Distribution of Distances')
+    # Show the plot
+    plt.show()
 
-# # Show the plot
-# plt.show()
+# %% [markdown]
+# ##### Velocity Distributions
+
+# %%
+for col in velocity_results.columns:
+    # Plot the histogram with logarithmic scaling
+    sns.histplot(velocity_results[col], bins=100, log_scale=(True, False))
+
+    # Add labels and title
+    plt.xlabel(f'Distance Traveled by {col}(km)')
+    plt.ylabel('Frequency')
+    plt.title(f'Distribution of Distances for {col}')
+
+    # Show the plot
+    plt.show()
 
 
