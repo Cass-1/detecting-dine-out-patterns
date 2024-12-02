@@ -263,7 +263,7 @@ for col in velocity_results.columns:
     plt.show()
 
 # %% [markdown]
-# ##### Stillness
+# ##### Low Movement
 
 # %%
 for col in low_movement.columns:
