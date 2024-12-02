@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from haversine import haversine_vector
 import seaborn as sns
+from IPython.display import display
 
 # Define functions
 def get_distance_between_rows(df):
@@ -333,6 +334,23 @@ for name, group in grouped_movements_data:
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.show()
+    # Count the number of visits to each location
+    visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
 
+    # Plot the restaurant locations
+    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
+
+    # Plot the person's path with weighted markers
+    plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {person_id}', color='blue', alpha=0.2)
+
+    # Add title and labels
+    plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.show()
+    display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 
 
