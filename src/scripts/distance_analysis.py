@@ -46,6 +46,10 @@ def get_time_between_rows(df):
 # Load the data
 file_path = '../../data/movements.csv'
 movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
+restaurant_data = pd.read_csv("../../data/restaurants.csv")  # Replace with your file path
+
+# %% [markdown]
+# ##### Distance
 
 # %%
 # get distance and time between each measurement
@@ -63,10 +67,16 @@ for name, group in grouped:
 distance_results = pd.DataFrame({ key:pd.Series(value) for key, value in distance_dict.items() })
 time_results = pd.DataFrame({ key:pd.Series(value) for key, value in time_dict.items() })
 
+# %% [markdown]
+# ##### Velocity
+
 # %%
 # get velocity
 velocity_results = distance_results / time_results
 velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
+
+# %% [markdown]
+# ##### Low Movement
 
 # %%
 # get low movement
@@ -278,5 +288,51 @@ for col in low_movement.columns:
 
     # Show the plot
     plt.show()
+
+# %% [markdown]
+# #### Walking Graphs
+
+# %% [markdown]
+# ##### Restaurants
+
+# %%
+# Plot the restaurant locations
+plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
+
+# Annotate each restaurant with its name
+for i, row in restaurant_data.iterrows():
+    plt.annotate(row['Name'], (row['Longitude'], row['Latitude']), textcoords="offset points", xytext=(0,10), ha='center')
+
+# Add title and labels
+plt.title('Restaurant Locations')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
+
+# %% [markdown]
+# ##### Restaurants with People's Paths
+
+# %%
+# Plot the restaurant locations
+grouped_movements_data = movements_data.groupby('id')
+for name, group in grouped_movements_data:
+    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
+    # Plot the person's path
+    person_id = name  # Change this to the desired person's ID
+    person_data = movements_data[movements_data['id'] == person_id]
+    plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {person_id}', color='blue', alpha=0.6)
+
+    # Add title and labels
+    plt.title(f'Restaurant Locations and {name}\'s Path')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.show()
+
 
 
