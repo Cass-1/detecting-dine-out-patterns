@@ -42,14 +42,16 @@
         "vscode": {
             "settings": {
                 "python.terminal.activateEnvInCurrentTerminal": true,
-                "python.defaultInterpreterPath": ".venv/bin/python"
+                "python.defaultInterpreterPath": ".venv/bin/python",
+                "material-icon-theme.folders.theme": "classic"
             },
             "extensions": [
                 "mechatroner.rainbow-csv",
                 "eamodio.gitlens",
                 "ms-toolsai.jupyter",
                 "GitHub.copilot",
-                "GitHub.copilot-chat"
+                "GitHub.copilot-chat",
+                "PKief.material-icon-theme"
             ]
         }
     }
