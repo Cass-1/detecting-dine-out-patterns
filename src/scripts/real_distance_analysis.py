@@ -304,50 +304,143 @@ plt.grid(True)
 plt.show()
 
 # %% [markdown]
-# ##### Restaurants with People's Paths
+# ##### Seperate Person Data
 
 # %%
-# Plot the restaurant locations and paths
-grouped_movements_data = movements_data.groupby('id')
-for name, group in grouped_movements_data:
-    plt.figure(figsize=(10, 6))
-    
-    # Plot the restaurant locations
-    
-    plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
-    # Plot the person's path
-    person_data = group.dropna(subset=['longitude', 'latitude'])
-    plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {name}', color='blue', alpha=0.6)
-    
-    # Set the limits of the plot to focus on the person's path
-    plt.xlim(person_data['longitude'].min() - 0.01, person_data['longitude'].max() + 0.01)
-    plt.ylim(person_data['latitude'].min() - 0.01, person_data['latitude'].max() + 0.01)
+person_121 = movements_data[movements_data['id'] == 121]
+person_125 = movements_data[movements_data['id'] == 125]
 
-    # Add title and labels
-    plt.title(f'Restaurant Locations and {name}\'s Path')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    # plt.legend()
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.show()
-    # Count the number of visits to each location
-    visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
+# %%
+import folium
+from folium.plugins import HeatMap
+from sklearn.cluster import DBSCAN
 
-    # Plot the restaurant locations with visit weights
-    plt.figure(figsize=(10, 6))
-    plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', alpha=0.7)
-    plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {name}', color='blue', alpha=0.6)
+# Create a base map
+base_map = folium.Map(location=[person_121['latitude'].mean(), person_121['longitude'].mean()], zoom_start=12)
 
-    # Add title and labels
-    plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.show()
-    
-    display(visit_counts.sort_values(by='counts', ascending=False).head(10))
+# Extract the latitude and longitude data
+heat_data = person_121[['latitude', 'longitude']].dropna().values.tolist()
+
+# Add the heatmap layer
+HeatMap(heat_data).add_to(base_map)
+
+
+
+# Add clustered places as pins on the map
+for _, row in restaurant_data.head(300).iterrows():
+    folium.Marker(
+        location=[row['latitude'], row['longitude']]
+    ).add_to(base_map)
+
+# Display the map
+base_map
+
+# %% [markdown]
+# ##### Person One
+
+# %%
+plt.figure(figsize=(10, 6))
+
+# Plot the restaurant locations
+
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
+# Plot the person's path
+person_data = person_121.dropna(subset=['longitude', 'latitude'])
+plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {121}', color='blue', alpha=0.6)
+
+# Add title and labels
+plt.title(f'{121}\'s Path with Restaurant Locations')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+# plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
+# Count the number of visits to each location
+visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
+
+# Plot the restaurant locations with visit weights
+plt.figure(figsize=(10, 6))
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s',s=10, alpha=0.7)
+plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {121}', color='blue', alpha=0.6)
+
+# Add title and labels
+plt.title(f'Restaurant Locations and {121}\'s Path with Visit Weights')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
+
+display(visit_counts.sort_values(by='counts', ascending=False).head(10))
+
+# %% [markdown]
+# ##### Person Two
+
+# %%
+plt.figure(figsize=(10, 6))
+
+# FULL GRAPH
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
+# Plot the person's path
+person_data = person_125.dropna(subset=['longitude', 'latitude'])
+
+# plot person's movement
+plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {125}', color='blue', alpha=0.6)
+
+# add title and labels
+plt.title(f'{125}\'s Path and R')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+# plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
+
+
+
+
+visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
+
+# Plot the restaurant locations with visit weights
+plt.figure(figsize=(10, 6))
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', alpha=0.7)
+plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {125}', color='blue', alpha=0.6)
+
+# Add title and labels
+plt.title(f'Restaurant Locations and {125}\'s Path with Visit Weights')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
+
+display(visit_counts.sort_values(by='counts', ascending=False).head(10))
+
+# %%
+# FOCUS ON RESTAURANT
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
+# Plot the person's path
+person_data = person_125.dropna(subset=['longitude', 'latitude'])
+
+# plot person's movement
+plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {125}', color='blue', alpha=0.6)
+
+
+# set limits of graph
+plt.xlim(restaurant_data['longitude'].min() - 0.01, restaurant_data['longitude'].max() + 0.01)
+plt.ylim(restaurant_data['latitude'].min() - 0.01, restaurant_data['latitude'].max() + 0.01)
+
+
+# add title and labels
+plt.title(f'Restaurant Locations with {125}\'s Path')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+# plt.legend()
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.show()
 
 
