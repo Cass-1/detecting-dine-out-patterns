@@ -44,10 +44,17 @@ def get_time_between_rows(df):
     return getHours(difference)
 
 # %%
+def clean_restaurant_data(df):
+    df.columns = df.columns.str.lower()
+    df['longitude'] = df['longitude'] / 1000000 * -1
+    df['latitude'] = df['latitude'] / 1000000
+    return df
+
 # Load the data
 file_path = '../../data/real_movements.csv'
 movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
 restaurant_data = pd.read_csv("../../data/real_restaurants.csv")  # Replace with your file path
+restaurant_data = clean_restaurant_data(restaurant_data)
 
 # %% [markdown]
 # ##### Distance
@@ -285,7 +292,7 @@ for col in low_movement.columns:
 # %%
 # Plot all restaurant locations
 plt.figure(figsize=(10, 6))
-plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=10, alpha=0.7)
+plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
 
 # Add title and labels
 plt.title('Restaurant Locations')
@@ -307,7 +314,7 @@ for name, group in grouped_movements_data:
     
     # Plot the restaurant locations
     
-    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=10, alpha=0.7)
+    plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', s=10, alpha=0.7)
     # Plot the person's path
     person_data = group.dropna(subset=['longitude', 'latitude'])
     plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {name}', color='blue', alpha=0.6)
@@ -324,23 +331,23 @@ for name, group in grouped_movements_data:
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.show()
-    # # Count the number of visits to each location
-    # visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
+    # Count the number of visits to each location
+    visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
 
-    # # Plot the restaurant locations with visit weights
-    # plt.figure(figsize=(10, 6))
-    # plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s',s=1, alpha=0.7)
-    # plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts']*10, label=f'Path of {name}', color='blue', alpha=0.6)
+    # Plot the restaurant locations with visit weights
+    plt.figure(figsize=(10, 6))
+    plt.scatter(restaurant_data['longitude'], restaurant_data['latitude'], label='restaurants', color='red', marker='s', alpha=0.7)
+    plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {name}', color='blue', alpha=0.6)
 
-    # # Add title and labels
-    # plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
-    # plt.xlabel('Longitude')
-    # plt.ylabel('Latitude')
-    # plt.legend()
-    # plt.xticks(rotation=45)
-    # plt.grid(True)
-    # plt.show()
+    # Add title and labels
+    plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.show()
     
-    # display(visit_counts.sort_values(by='counts', ascending=False).head(10))
+    display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 
 
