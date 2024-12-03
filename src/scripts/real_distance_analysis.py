@@ -1,8 +1,5 @@
 # %% [markdown]
-# # Distance Analysis
-
-# %% [markdown]
-# #### Get Data
+# # Get Data
 
 # %%
 import pandas as pd
@@ -59,7 +56,7 @@ restaurant_data = pd.read_csv("../../data/real_restaurants.csv")  # Replace with
 restaurant_data = clean_restaurant_data(restaurant_data)
 
 # %% [markdown]
-# ##### Distance
+# ## Distance
 
 # %%
 # get distance and time between each measurement
@@ -83,6 +80,10 @@ for name, group in grouped:
 distance_results = pd.DataFrame({ key:pd.Series(value) for key, value in distance_dict.items() })
 time_results = pd.DataFrame({ key:pd.Series(value) for key, value in time_dict.items() })
 
+# %% [markdown]
+# ## Velocity
+
+# %%
 # get velocity
 velocity_results = distance_results / time_results
 velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
@@ -96,25 +97,7 @@ velocity_results.head()
 
 
 # %% [markdown]
-# ##### Velocity
-
-# %%
-
-
-
-
-# %% [markdown]
-# ##### Low Movement
-
-# %%
-# get low movement
-LOW_MOVEMENT_BOUND = 1 # determined by 25% of data in distance_results
-low_movement = pd.DataFrame()
-for col in distance_results.columns:
-    low_movement[col] = pd.Series([distance for distance in distance_results[col] if distance < LOW_MOVEMENT_BOUND])
-
-# %% [markdown]
-# #### Missing Values
+# # Missing Values
 
 # %%
 missing_movement_data = pd.DataFrame()
@@ -140,7 +123,7 @@ print(distance_results.apply(lambda x: x.isna().sum()))
 print(time_results.apply(lambda x: x.isna().sum()))
 
 # %% [markdown]
-# #### Summary Stats
+# # Summary Stats
 
 # %%
 distance_results.apply(lambda x: x.describe())
@@ -153,7 +136,7 @@ low_movement_in_meters = low_movement * 1000
 low_movement_in_meters.apply(lambda x: x.describe())
 
 # %% [markdown]
-# #### Sleep
+# # Sleep
 
 # %%
 def longest_stretch_no_movement(df, threshold, movements_data):
@@ -195,6 +178,7 @@ def longest_stretch_no_movement(df, threshold, movements_data):
     
     return longest_stretch, stretch_timestamps, stretch_durations
 
+# LOW_MOVEMENT_BOUND = NaN
 SLEEP_UPPER_BOUND = 0.5 / 1000
 # Find the longest stretch of no movement for each individual, their timestamps, and durations
 longest_stretch_no_movement_results, stretch_timestamps, stretch_durations = longest_stretch_no_movement(distance_results, LOW_MOVEMENT_BOUND, movements_data)
@@ -210,10 +194,10 @@ longest_stretch_df = pd.DataFrame({
 longest_stretch_df.head(10)
 
 # %% [markdown]
-# #### Graphs
+# # Graphs
 
 # %% [markdown]
-# ##### Velocity Over Time
+# ## Velocity Over Time
 
 # %%
 n_1 = 1
@@ -241,7 +225,7 @@ for col in velocity_results.columns:
     plt.show()
 
 # %% [markdown]
-# ##### Movement Distributions
+# ## Movement Distributions
 
 # %%
 for col in distance_results.columns:
@@ -271,7 +255,7 @@ for col in distance_results.columns:
     plt.show()
 
 # %% [markdown]
-# ##### Velocity Distributions
+# ## Velocity Distributions
 
 # %%
 for col in velocity_results.columns:
@@ -287,7 +271,7 @@ for col in velocity_results.columns:
     plt.show()
 
 # %% [markdown]
-# ##### Low Movement
+# ## Low Movement
 
 # %%
 for col in low_movement.columns:
@@ -304,10 +288,10 @@ for col in low_movement.columns:
     plt.show()
 
 # %% [markdown]
-# #### Walking Graphs
+# ## Heatmaps and Restuarant Maps
 
 # %% [markdown]
-# ##### Restaurants
+# ### Restaurants
 
 # %%
 # Plot all restaurant locations
@@ -324,14 +308,14 @@ plt.grid(True)
 plt.show()
 
 # %% [markdown]
-# ##### Seperate Person Data
+# ### Seperate Person Data
 
 # %%
 person_121 = movements_data[movements_data['id'] == 121]
 person_125 = movements_data[movements_data['id'] == 125]
 
 # %% [markdown]
-# ##### Velocity HeatMap Person 121
+# ### Velocity HeatMap Person 121
 
 # %%
 velocity_results_121 = pd.DataFrame({
@@ -352,6 +336,9 @@ HeatMap(heat_data, radius=15, blur=10, max_zoom=1).add_to(base_map)
 # Display the map
 base_map
 
+# %% [markdown]
+# ### Velocity HeatMap Person 125
+
 # %%
 velocity_results_125 = pd.DataFrame({
     'latitude': velocity_results['Midpoint_Latitude_125'],
@@ -370,6 +357,9 @@ HeatMap(heat_data, radius=15, blur=10, max_zoom=1).add_to(base_map)
 
 # Display the map
 base_map
+
+# %% [markdown]
+# ### Demo Visit Map
 
 # %%
 # Create a base map
@@ -393,7 +383,7 @@ for _, row in restaurant_data.head(300).iterrows():
 base_map
 
 # %% [markdown]
-# ##### Person One
+# ### Person One
 
 # %%
 plt.figure(figsize=(10, 6))
@@ -433,7 +423,7 @@ plt.show()
 display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 
 # %% [markdown]
-# ##### Person Two
+# ### Person Two
 
 # %%
 plt.figure(figsize=(10, 6))
