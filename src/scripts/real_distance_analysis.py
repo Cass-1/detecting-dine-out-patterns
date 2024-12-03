@@ -24,7 +24,7 @@ def get_distance_between_rows(df):
     
     coords1 = df[['latitude', 'longitude']].values[:-1]
     coords2 = df[['latitude', 'longitude']].values[1:]
-    distances = haversine_vector(coords1, coords2)
+    distances = haversine_vector(coords1, coords2, unit='m')  # Convert to meters
     return distances
 
 # check
@@ -81,7 +81,7 @@ velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.column
 
 # %%
 # get low movement
-LOW_MOVEMENT_BOUND = 0.007826 # determined by 25% of data in distance_results
+LOW_MOVEMENT_BOUND = 1 # determined by 25% of data in distance_results
 low_movement = pd.DataFrame()
 for col in distance_results.columns:
     low_movement[col] = pd.Series([distance for distance in distance_results[col] if distance < LOW_MOVEMENT_BOUND])
@@ -232,20 +232,6 @@ for col in distance_results.columns:
 # %%
 for col in distance_results.columns:
     # Plot the histogram with logarithmic scaling
-    sns.histplot([distance for distance in distance_results[col] if distance > 10], bins=100, log_scale=(True, False))
-    
-
-    # Add labels and title
-    plt.xlabel(f'Distance Traveled by {col} > 10(km)')
-    plt.ylabel('Frequency')
-    plt.title(f'Distribution of Distances for {col}')
-
-    # Show the plot
-    plt.show()
-
-# %%
-for col in distance_results.columns:
-    # Plot the histogram with logarithmic scaling
     sns.histplot([distance for distance in distance_results[col] if distance < 3], bins=100, log_scale=(True, False))
     
 
@@ -297,12 +283,9 @@ for col in low_movement.columns:
 # ##### Restaurants
 
 # %%
-# Plot the restaurant locations
-plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
-
-# Annotate each restaurant with its name
-for i, row in restaurant_data.iterrows():
-    plt.annotate(row['Name'], (row['Longitude'], row['Latitude']), textcoords="offset points", xytext=(0,10), ha='center')
+# Plot all restaurant locations
+plt.figure(figsize=(10, 6))
+plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=10, alpha=0.7)
 
 # Add title and labels
 plt.title('Restaurant Locations')
@@ -317,40 +300,47 @@ plt.show()
 # ##### Restaurants with People's Paths
 
 # %%
-# Plot the restaurant locations
+# Plot the restaurant locations and paths
 grouped_movements_data = movements_data.groupby('id')
 for name, group in grouped_movements_data:
-    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
+    plt.figure(figsize=(10, 6))
+    
+    # Plot the restaurant locations
+    
+    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=10, alpha=0.7)
     # Plot the person's path
-    person_id = name  # Change this to the desired person's ID
-    person_data = movements_data[movements_data['id'] == person_id]
-    plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {person_id}', color='blue', alpha=0.6)
+    person_data = group.dropna(subset=['longitude', 'latitude'])
+    plt.plot(person_data['longitude'], person_data['latitude'], label=f'Path of {name}', color='blue', alpha=0.6)
+    
+    # Set the limits of the plot to focus on the person's path
+    plt.xlim(person_data['longitude'].min() - 0.01, person_data['longitude'].max() + 0.01)
+    plt.ylim(person_data['latitude'].min() - 0.01, person_data['latitude'].max() + 0.01)
 
     # Add title and labels
     plt.title(f'Restaurant Locations and {name}\'s Path')
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    plt.legend()
+    # plt.legend()
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.show()
-    # Count the number of visits to each location
-    visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
+    # # Count the number of visits to each location
+    # visit_counts = person_data.groupby(['longitude', 'latitude']).size().reset_index(name='counts')
 
-    # Plot the restaurant locations
-    plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s', s=100, alpha=0.7)
+    # # Plot the restaurant locations with visit weights
+    # plt.figure(figsize=(10, 6))
+    # plt.scatter(restaurant_data['Longitude'], restaurant_data['Latitude'], label='Restaurants', color='red', marker='s',s=1, alpha=0.7)
+    # plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts']*10, label=f'Path of {name}', color='blue', alpha=0.6)
 
-    # Plot the person's path with weighted markers
-    plt.scatter(visit_counts['longitude'], visit_counts['latitude'], s=visit_counts['counts'], label=f'Path of {person_id}', color='blue', alpha=0.2)
-
-    # Add title and labels
-    plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.show()
-    display(visit_counts.sort_values(by='counts', ascending=False).head(10))
+    # # Add title and labels
+    # plt.title(f'Restaurant Locations and {name}\'s Path with Visit Weights')
+    # plt.xlabel('Longitude')
+    # plt.ylabel('Latitude')
+    # plt.legend()
+    # plt.xticks(rotation=45)
+    # plt.grid(True)
+    # plt.show()
+    
+    # display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 
 
