@@ -197,6 +197,12 @@ longest_stretch_df.head(10)
 # # Graphs
 
 # %% [markdown]
+# ## Visit Heatmap
+
+# %%
+
+
+# %% [markdown]
 # ## Velocity Over Time
 
 # %%
@@ -313,6 +319,37 @@ plt.show()
 # %%
 person_121 = movements_data[movements_data['id'] == 121]
 person_125 = movements_data[movements_data['id'] == 125]
+
+# %%
+# Load the visits data
+visits_data = pd.read_csv("../../data/visits.csv")
+visits_data.head()
+
+# Join the latitude and longitude columns of the restaurant_data to the visits data on restaurant id
+visits_data = visits_data.merge(restaurant_data[['restaurant id', 'latitude', 'longitude']], on='restaurant id', how='left')
+
+visits_121 = visits_data[visits_data['id'] == 121]
+
+# Create a base map
+base_map = folium.Map(location=[person_121['latitude'].mean(), person_121['longitude'].mean()], zoom_start=12)
+
+# Extract the latitude and longitude data
+heat_data = person_121[['latitude', 'longitude']].dropna().values.tolist()
+
+# Add the heatmap layer
+HeatMap(heat_data).add_to(base_map)
+
+
+
+# Add clustered places as pins on the map
+for _, row in visits_121.head(300).iterrows():
+    folium.Marker(
+        location=[row['latitude'], row['longitude']],
+        popup=f"Time: {row['start_time']} - {row['end_time']}"
+    ).add_to(base_map)
+
+# Display the map
+base_map
 
 # %% [markdown]
 # ### Velocity HeatMap Person 121
