@@ -11,6 +11,8 @@ import numpy as np
 from haversine import haversine_vector
 import seaborn as sns
 from IPython.display import display
+import folium
+from folium.plugins import HeatMap
 
 # Define functions
 def get_distance_between_rows(df):
@@ -64,24 +66,42 @@ restaurant_data = clean_restaurant_data(restaurant_data)
 grouped = movements_data.groupby('id')
 distance_dict = {}
 time_dict = {}
+midpoints_latitude_dict = {}
+midpoints_longitude_dict = {}
 
 for name, group in grouped:
     distances = get_distance_between_rows(group)
     times = get_time_between_rows(group)
     distance_dict[name] = distances
     time_dict[name] = times
+    midpoints_latitude = (group['latitude'].values[:-1] + group['latitude'].values[1:]) / 2
+    midpoints_longitude = (group['longitude'].values[:-1] + group['longitude'].values[1:]) / 2
+    midpoints_latitude_dict[name] = midpoints_latitude
+    midpoints_longitude_dict[name] = midpoints_longitude
 
 # replaces missing items w/ NaN
 distance_results = pd.DataFrame({ key:pd.Series(value) for key, value in distance_dict.items() })
 time_results = pd.DataFrame({ key:pd.Series(value) for key, value in time_dict.items() })
 
+# get velocity
+velocity_results = distance_results / time_results
+velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
+
+# add midpoints data to velocity_results
+for name in midpoints_latitude_dict.keys():
+    velocity_results[f'Midpoint_Latitude_{name}'] = pd.Series(midpoints_latitude_dict[name])
+    velocity_results[f'Midpoint_Longitude_{name}'] = pd.Series(midpoints_longitude_dict[name])
+
+velocity_results.head()
+
+
 # %% [markdown]
 # ##### Velocity
 
 # %%
-# get velocity
-velocity_results = distance_results / time_results
-velocity_results.columns = [f'Velocity_{col}' for col in velocity_results.columns]
+
+
+
 
 # %% [markdown]
 # ##### Low Movement
@@ -310,11 +330,48 @@ plt.show()
 person_121 = movements_data[movements_data['id'] == 121]
 person_125 = movements_data[movements_data['id'] == 125]
 
-# %%
-import folium
-from folium.plugins import HeatMap
-from sklearn.cluster import DBSCAN
+# %% [markdown]
+# ##### Velocity HeatMap Person 121
 
+# %%
+velocity_results_121 = pd.DataFrame({
+    'latitude': velocity_results['Midpoint_Latitude_121'],
+    'longitude': velocity_results['Midpoint_Longitude_121'],
+    'velocity': velocity_results['Velocity_121']
+})
+velocity_results_121 = velocity_results_121.dropna(subset=['latitude', 'longitude', 'velocity'])
+# Create a base map centered at the mean latitude and longitude
+base_map = folium.Map(location=[velocity_results_121['latitude'].mean(), velocity_results_121['longitude'].mean()], zoom_start=12)
+
+# Prepare the data for the heatmap
+heat_data = velocity_results_121[['latitude', 'longitude', 'velocity']].values.tolist()
+
+# Add the heatmap layer
+HeatMap(heat_data, radius=15, blur=10, max_zoom=1).add_to(base_map)
+
+# Display the map
+base_map
+
+# %%
+velocity_results_125 = pd.DataFrame({
+    'latitude': velocity_results['Midpoint_Latitude_125'],
+    'longitude': velocity_results['Midpoint_Longitude_125'],
+    'velocity': velocity_results['Velocity_125']
+})
+velocity_results_125 = velocity_results_125.dropna(subset=['latitude', 'longitude', 'velocity'])
+# Create a base map centered at the mean latitude and longitude
+base_map = folium.Map(location=[velocity_results_125['latitude'].mean(), velocity_results_125['longitude'].mean()], zoom_start=12)
+
+# Prepare the data for the heatmap
+heat_data = velocity_results_125[['latitude', 'longitude', 'velocity']].values.tolist()
+
+# Add the heatmap layer
+HeatMap(heat_data, radius=15, blur=10, max_zoom=1).add_to(base_map)
+
+# Display the map
+base_map
+
+# %%
 # Create a base map
 base_map = folium.Map(location=[person_121['latitude'].mean(), person_121['longitude'].mean()], zoom_start=12)
 
