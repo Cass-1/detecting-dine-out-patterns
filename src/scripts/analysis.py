@@ -8,11 +8,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from haversine import haversine_vector
+from haversine import haversine_vector, Unit
 import seaborn as sns
 from IPython.display import display
 import folium
 from folium.plugins import HeatMap, FastMarkerCluster, MarkerCluster
+from scipy.stats import kstest
 
 # %%
 def clean_restaurant_data(df):
@@ -26,7 +27,10 @@ file_path = '../../data/real_movements.csv'
 movements_data = pd.read_csv(file_path, parse_dates=['datetime'])
 restaurant_data = pd.read_csv("../../data/real_restaurants.csv")  # Replace with your file path
 visits_data = pd.read_csv("../../data/visits.csv")
+
+# cleaning
 restaurant_data = clean_restaurant_data(restaurant_data)
+movements_data = movements_data.drop_duplicates(subset=['datetime', 'id'])
 
 # %% [markdown]
 # ## Distance
@@ -45,7 +49,7 @@ def get_distance_between_rows(df):
     
     coords1 = df[['latitude', 'longitude']].values[:-1]
     coords2 = df[['latitude', 'longitude']].values[1:]
-    distances = haversine_vector(coords1, coords2, unit='m')  # Convert to meters
+    distances = haversine_vector(coords1, coords2, Unit.KILOMETERS)
     return distances
 
 # check
@@ -101,6 +105,83 @@ for name in midpoints_latitude_dict.keys():
 
 velocity_results.head()
 
+# %%
+velocity_results_121 = velocity_results[['Velocity_121', 'Midpoint_Latitude_121', 'Midpoint_Longitude_121']]
+velocity_results_125 = velocity_results[['Velocity_125', 'Midpoint_Latitude_125', 'Midpoint_Longitude_125']]
+
+velocity_results_125.dropna(how='all')
+
+# %% [markdown]
+# ## Removing outliers
+
+# %% [markdown]
+# ### Finding Distributions
+
+# %%
+distance_results.columns = distance_results.columns.astype(str)
+plt.boxplot(x=distance_results['121'], vert=False, showfliers=False)
+plt.show()
+plt.hist(distance_results['121'], log=True)
+plt.show()
+display(distance_results['121'].describe()) 
+
+# %%
+plt.boxplot(distance_results['125'], vert=False, showfliers=False)
+plt.show()
+plt.hist(distance_results['125'], log=True)
+plt.show()
+display(distance_results['125'].describe()) 
+
+# %%
+plt.boxplot(x=velocity_results['Velocity_121'], vert=False, showfliers=False)
+plt.show()
+plt.hist(velocity_results['Velocity_121'], log=True)
+plt.show()
+display(velocity_results['Velocity_121'].describe()) 
+
+# %%
+plt.boxplot(x=velocity_results['Velocity_125'], vert=False, showfliers=False)
+plt.show()
+plt.hist(velocity_results['Velocity_125'], log=True)
+plt.show()
+display(velocity_results['Velocity_125'].describe()) 
+
+
+# %%
+velocity_results_121_clean = velocity_results_121[velocity_results_121['Velocity_121'].abs() < 3000]
+velocity_results_125_clean = velocity_results_125[velocity_results_125['Velocity_125'].abs() < 3000]
+
+# %%
+print((len(velocity_results_121_clean) - len(velocity_results_121)) / len(velocity_results_121))
+display(velocity_results_121_clean.describe())
+display(velocity_results_121.describe())
+
+# %%
+print((len(velocity_results_125_clean) - len(velocity_results_125.dropna())) / len(velocity_results_125.dropna()))
+display(velocity_results_125_clean.describe())
+display(velocity_results_125.describe())
+
+
+# %%
+# mean = distance_results['121'].mean()
+# std = distance_results['121'].std()
+# threshold = 3
+# outlier = []
+
+# z_scores_121 = pd.DataFrame((distance_results['121'] - mean) / std)
+# z_scores_121 = z_scores_121.rename(columns={'121': 'Z_Scores_121'})
+# # z_scores_121 = z_scores_121[z_scores_121['Z_Scores_121'].abs() > threshold]
+
+# display(z_scores_121.describe())
+# z_scores_121_abovebound = z_scores_121[z_scores_121['Z_Scores_121'].abs() > threshold]
+# display(z_scores_121_abovebound.describe())
+
+# testing normal distribution
+
+kstest(velocity_results['Velocity_121'], 'norm') # not normal
+kstest(velocity_results['Velocity_125'].dropna(), 'norm') # not normal
+
+
 # %% [markdown]
 # # GeoMaps
 
@@ -109,7 +190,7 @@ velocity_results.head()
 
 # %%
 marker_cluster = MarkerCluster()
-restaurant_data.drop_duplicates(subset=['name']).apply(lambda x: marker_cluster.add_child(folium.Marker(
+restaurant_data.drop_duplicates().apply(lambda x: marker_cluster.add_child(folium.Marker(
     location=[x['latitude'], x['longitude']],
     popup=f"{x['name']}\n{x['category']}",
     )), axis=1)
@@ -124,7 +205,7 @@ restaurant_map.add_child(marker_cluster)
 # ### Prep Visits Data
 
 # %%
-visits_data = visits_data.merge(restaurant_data[['restaurant id', 'latitude', 'longitude', 'category']], on='restaurant id', how='left')
+visits_data = visits_data.merge(restaurant_data[['restaurant id', 'latitude', 'longitude','name', 'category']], on='restaurant id', how='left')
 
 marker_colors = ['red', 'blue', 'green', 'purple', 'orange', 'darkred','lightred', 'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkpurple', 'white', 'pink', 'lightblue', 'lightgreen', 'gray', 'black', 'lightgray']
 # if (len(visits_data['category'].unique()) > marker_colors):
@@ -156,7 +237,7 @@ HeatMap(heat_data).add_to(base_map)
 for _, row in visits_121.iterrows():
     folium.Marker(
         location=[row['latitude'], row['longitude']],
-        popup=f"Time: {row['start_time']} - {row['end_time']}\n{row['category']}",
+        popup=f"Time: {row['start_time']} - {row['end_time']}\nName: {row['name']}\nType: {row['category']}",
         icon=folium.Icon(color=row['color'])
     ).add_to(base_map)
 
@@ -184,7 +265,7 @@ HeatMap(heat_data).add_to(base_map)
 # Add clustered places as pins on the map
 visits_125.apply(lambda row: folium.Marker(
         location=[row['latitude'], row['longitude']],
-        popup=f"Time: {row['start_time']} - {row['end_time']}\n{row['category']}",
+        popup=f"Time: {row['start_time']} - {row['end_time']}\nName: {row['name']}\nType: {row['category']}",
         icon=folium.Icon(color=row['color'])
     ).add_to(base_map), axis=1)
     
@@ -200,9 +281,9 @@ base_map
 
 # %%
 velocity_results_121 = pd.DataFrame({
-    'latitude': velocity_results['Midpoint_Latitude_121'],
-    'longitude': velocity_results['Midpoint_Longitude_121'],
-    'velocity': velocity_results['Velocity_121']
+    'latitude': velocity_results_121_clean['Midpoint_Latitude_121'],
+    'longitude': velocity_results_121_clean['Midpoint_Longitude_121'],
+    'velocity': velocity_results_121_clean['Velocity_121']
 })
 velocity_results_121 = velocity_results_121.dropna(subset=['latitude', 'longitude', 'velocity'])
 # Create a base map centered at the mean latitude and longitude
@@ -222,9 +303,9 @@ base_map
 
 # %%
 velocity_results_125 = pd.DataFrame({
-    'latitude': velocity_results['Midpoint_Latitude_125'],
-    'longitude': velocity_results['Midpoint_Longitude_125'],
-    'velocity': velocity_results['Velocity_125']
+    'latitude': velocity_results_125_clean['Midpoint_Latitude_125'],
+    'longitude': velocity_results_125_clean['Midpoint_Longitude_125'],
+    'velocity': velocity_results_125_clean['Velocity_125']
 })
 velocity_results_125 = velocity_results_125.dropna(subset=['latitude', 'longitude', 'velocity'])
 # Create a base map centered at the mean latitude and longitude
@@ -341,8 +422,11 @@ display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 # # Velocity Distribution
 
 # %%
+
+
+# %%
 # Plot the histogram with logarithmic scaling
-sns.histplot(velocity_results['Velocity_121'], bins=100, log_scale=(True, False))
+sns.histplot(velocity_results_121_clean['Velocity_121'], bins=100, log_scale=(True, False))
 
 # Add labels and title
 plt.xlabel(f' Velocity_121(km/h)')
@@ -353,7 +437,7 @@ plt.title(f'Distribution of Velocity_121')
 plt.show()
 
     # Plot the histogram with logarithmic scaling
-sns.histplot(velocity_results['Velocity_125'], bins=100, log_scale=(True, False))
+sns.histplot(velocity_results_125_clean['Velocity_125'], bins=100, log_scale=(True, False))
 
 # Add labels and title
 plt.xlabel(f' Velocity_125(km/h)')
