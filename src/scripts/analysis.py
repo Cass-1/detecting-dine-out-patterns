@@ -103,6 +103,8 @@ for name in midpoints_latitude_dict.keys():
     velocity_results[f'Midpoint_Latitude_{name}'] = pd.Series(midpoints_latitude_dict[name])
     velocity_results[f'Midpoint_Longitude_{name}'] = pd.Series(midpoints_longitude_dict[name])
 
+velocity_results['Velocity_121'] = velocity_results['Velocity_121'].abs()
+velocity_results['Velocity_125'] = velocity_results['Velocity_125'].abs()
 velocity_results.head()
 
 # %%
@@ -119,18 +121,42 @@ velocity_results_125.dropna(how='all')
 
 # %%
 distance_results.columns = distance_results.columns.astype(str)
-plt.boxplot(x=distance_results['121'], vert=False, showfliers=False)
+#  boxplot
+plt.boxplot(x=distance_results['121'], vert=False, showfliers=True,)
+plt.title("Boxplot of Distance for ID 121 with Outliers")
+plt.xlabel("Distance (km)")
 plt.show()
+
+# histogram
 plt.hist(distance_results['121'], log=True)
+plt.title("Histogram of Distance Traveled Every Measurement for ID 121")
+plt.xlabel("Distance (km)")
+plt.ylabel("Frequency")
 plt.show()
+
+# histogram
+sns.histplot(distance_results['121'].abs(), bins=100, log_scale=(True, False))
+plt.xlabel(f'Distance (km)')
+plt.ylabel('Frequency')
+plt.title(f'Logrithmic Histogram of Distance for ID 121')
+
+# summary stats
 display(distance_results['121'].describe()) 
 
 # %%
-plt.boxplot(distance_results['125'], vert=False, showfliers=False)
+plt.boxplot(distance_results['125'].dropna(), vert=False, showfliers=False)
+plt.title("Boxplot of Distance for ID 125 without Outliers")
+plt.xlabel("Distance (km)")
 plt.show()
 plt.hist(distance_results['125'], log=True)
 plt.show()
 display(distance_results['125'].describe()) 
+
+# histogram
+sns.histplot(distance_results['125'].abs(), bins=100, log_scale=(True, False))
+plt.xlabel(f'Distance (km)')
+plt.ylabel('Frequency')
+plt.title(f'Logrithmic Histogram of Distance for ID 125')
 
 # %%
 plt.boxplot(x=velocity_results['Velocity_121'], vert=False, showfliers=False)
@@ -140,7 +166,7 @@ plt.show()
 display(velocity_results['Velocity_121'].describe()) 
 
 # %%
-plt.boxplot(x=velocity_results['Velocity_125'], vert=False, showfliers=False)
+plt.boxplot(x=velocity_results['Velocity_125'].dropna(), vert=False, showfliers=False)
 plt.show()
 plt.hist(velocity_results['Velocity_125'], log=True)
 plt.show()
@@ -148,8 +174,8 @@ display(velocity_results['Velocity_125'].describe())
 
 
 # %%
-velocity_results_121_clean = velocity_results_121[velocity_results_121['Velocity_121'].abs() < 3000]
-velocity_results_125_clean = velocity_results_125[velocity_results_125['Velocity_125'].abs() < 3000]
+velocity_results_121_clean = velocity_results_121[velocity_results_121['Velocity_121'].abs() < 1000]
+velocity_results_125_clean = velocity_results_125[velocity_results_125['Velocity_125'].abs() < 1000]
 
 # %%
 print((len(velocity_results_121_clean) - len(velocity_results_121)) / len(velocity_results_121))
@@ -181,6 +207,50 @@ display(velocity_results_125.describe())
 kstest(velocity_results['Velocity_121'], 'norm') # not normal
 kstest(velocity_results['Velocity_125'].dropna(), 'norm') # not normal
 
+
+# %%
+(velocity_results_121_clean[velocity_results_121_clean['Velocity_121'] == 0]).count()
+
+# %%
+DRIVING_SPEED_MAX = 113
+DRIVING_SPEED_MIN = 7
+
+velocity_results_125_clean['travel_type'] = pd.Series()
+velocity_results_125_clean.loc[velocity_results_125_clean['Velocity_125'] > DRIVING_SPEED_MAX, 'travel_type'] = 'Plane'
+velocity_results_125_clean.loc[velocity_results_125_clean['Velocity_125'] <= DRIVING_SPEED_MAX, 'travel_type'] = 'Driving'
+velocity_results_125_clean.loc[velocity_results_125_clean['Velocity_125'] < DRIVING_SPEED_MIN , 'travel_type'] = 'Walking'
+velocity_results_125_clean.loc[velocity_results_125_clean['Velocity_125'] == 0 , 'travel_type'] = 'Not Moving'
+
+
+plt.figure(figsize=(12, 8))
+plt.barh(velocity_results_125_clean['travel_type'].value_counts().index, velocity_results_125_clean['travel_type'].value_counts())
+# Add percentages to the end of each bar
+for index, value in enumerate(velocity_results_125_clean['travel_type'].value_counts()):
+    plt.text(value, index, f'{value / len(velocity_results_125_clean) * 100:.2f}%', va='center')
+
+plt.xlabel('Count')
+plt.ylabel('Travel Type')
+plt.title('Distribution of Travel Types for Person 125')
+plt.show()
+
+# %%
+velocity_results_121_clean['travel_type'] = pd.Series()
+velocity_results_121_clean.loc[velocity_results_121_clean['Velocity_121'] > DRIVING_SPEED_MAX, 'travel_type'] = 'Plane'
+velocity_results_121_clean.loc[velocity_results_121_clean['Velocity_121'] <= DRIVING_SPEED_MAX, 'travel_type'] = 'Driving'
+velocity_results_121_clean.loc[velocity_results_121_clean['Velocity_121'] < DRIVING_SPEED_MIN , 'travel_type'] = 'Walking'
+velocity_results_121_clean.loc[velocity_results_121_clean['Velocity_121'] == 0 , 'travel_type'] = 'Not Moving'
+
+
+plt.figure(figsize=(12, 8))
+plt.barh(velocity_results_121_clean['travel_type'].value_counts().index, velocity_results_121_clean['travel_type'].value_counts())
+# Add percentages to the end of each bar
+for index, value in enumerate(velocity_results_121_clean['travel_type'].value_counts()):
+    plt.text(value, index, f'{value / len(velocity_results_121_clean) * 100:.2f}%', va='center')
+
+plt.xlabel('Count')
+plt.ylabel('Travel Type')
+plt.title('Distribution of Travel Types for Person 121')
+plt.show()
 
 # %% [markdown]
 # # GeoMaps
