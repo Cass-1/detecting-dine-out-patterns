@@ -159,23 +159,23 @@ plt.ylabel('Frequency')
 plt.title(f'Logrithmic Histogram of Distance for ID 125')
 
 # %%
-plt.boxplot(x=velocity_results['Velocity_121'], vert=False, showfliers=False)
-plt.show()
-plt.hist(velocity_results['Velocity_121'], log=True)
-plt.show()
-display(velocity_results['Velocity_121'].describe()) 
+velocity_results_121_clean = velocity_results_121[velocity_results_121['Velocity_121'].abs() <= 1200]
+velocity_results_125_clean = velocity_results_125[velocity_results_125['Velocity_125'].abs() <= 1200]
 
 # %%
-plt.boxplot(x=velocity_results['Velocity_125'].dropna(), vert=False, showfliers=False)
+plt.boxplot(x=velocity_results_121_clean['Velocity_121'], vert=False, showfliers=False)
 plt.show()
-plt.hist(velocity_results['Velocity_125'], log=True)
+plt.hist(velocity_results_121_clean['Velocity_121'], log=True)
 plt.show()
-display(velocity_results['Velocity_125'].describe()) 
-
+display(velocity_results_121_clean['Velocity_121'].describe()) 
 
 # %%
-velocity_results_121_clean = velocity_results_121[velocity_results_121['Velocity_121'].abs() < 1000]
-velocity_results_125_clean = velocity_results_125[velocity_results_125['Velocity_125'].abs() < 1000]
+plt.boxplot(x=velocity_results_125_clean['Velocity_125'].dropna(), vert=False, showfliers=False)
+plt.show()
+plt.hist(velocity_results_125_clean['Velocity_125'], log=True)
+plt.show()
+display(velocity_results_125_clean['Velocity_125'].describe()) 
+
 
 # %%
 print((len(velocity_results_121_clean) - len(velocity_results_121)) / len(velocity_results_121))
@@ -212,7 +212,7 @@ kstest(velocity_results['Velocity_125'].dropna(), 'norm') # not normal
 (velocity_results_121_clean[velocity_results_121_clean['Velocity_121'] == 0]).count()
 
 # %%
-DRIVING_SPEED_MAX = 113
+DRIVING_SPEED_MAX = 130
 DRIVING_SPEED_MIN = 7
 
 velocity_results_125_clean['travel_type'] = pd.Series()
@@ -251,6 +251,9 @@ plt.xlabel('Count')
 plt.ylabel('Travel Type')
 plt.title('Distribution of Travel Types for Person 121')
 plt.show()
+
+# %%
+
 
 # %% [markdown]
 # # GeoMaps
@@ -402,6 +405,32 @@ restaurant_map_125 = restaurant_map
 restaurant_map_125.add_child(HeatMap(person_125[['latitude', 'longitude']].dropna().values.tolist()))
 
 # %% [markdown]
+# # Velocity Distribution
+
+# %%
+# Plot the histogram with logarithmic scaling
+sns.histplot(velocity_results_121_clean['Velocity_121'], bins=100, log_scale=(True, False))
+
+# Add labels and title
+plt.xlabel(f' Speed (km/h)')
+plt.ylabel('Frequency')
+plt.title(f'Logrithmic Histogram of Speed for ID 121')
+
+# Show the plot
+plt.show()
+
+    # Plot the histogram with logarithmic scaling
+sns.histplot(velocity_results_125_clean['Velocity_125'], bins=100, log_scale=(True, False))
+
+# Add labels and title
+plt.xlabel(f' Speed (km/h)')
+plt.ylabel('Frequency')
+plt.title(f'Logrithmic Histogram of Speed for ID 125')
+
+# Show the plot
+plt.show()
+
+# %% [markdown]
 # # Rough Maps
 
 # %% [markdown]
@@ -489,35 +518,6 @@ plt.show()
 display(visit_counts.sort_values(by='counts', ascending=False).head(10))
 
 # %% [markdown]
-# # Velocity Distribution
-
-# %%
-
-
-# %%
-# Plot the histogram with logarithmic scaling
-sns.histplot(velocity_results_121_clean['Velocity_121'], bins=100, log_scale=(True, False))
-
-# Add labels and title
-plt.xlabel(f' Velocity_121(km/h)')
-plt.ylabel('Frequency')
-plt.title(f'Distribution of Velocity_121')
-
-# Show the plot
-plt.show()
-
-    # Plot the histogram with logarithmic scaling
-sns.histplot(velocity_results_125_clean['Velocity_125'], bins=100, log_scale=(True, False))
-
-# Add labels and title
-plt.xlabel(f' Velocity_125(km/h)')
-plt.ylabel('Frequency')
-plt.title(f'Distribution of Velocity_125')
-
-# Show the plot
-plt.show()
-
-# %% [markdown]
 # # Sleep
 
 # %%
@@ -528,7 +528,7 @@ def longest_stretch_no_movement(df, threshold, movements_data):
     stretch_durations = {}
     
     for col in df.columns:
-        small_movement = df[col] < threshold
+        small_movement = df[col] <= threshold
         max_stretch = 0
         current_stretch = 0
         start_index = 0
@@ -560,9 +560,9 @@ def longest_stretch_no_movement(df, threshold, movements_data):
     
     return longest_stretch, stretch_timestamps, stretch_durations
 
-LOW_MOVEMENT_BOUND = 1/1000
+LOW_MOVEMENT_BOUND = 0
 # Find the longest stretch of no movement for each individual, their timestamps, and durations
-longest_stretch_no_movement_results, stretch_timestamps, stretch_durations = longest_stretch_no_movement(distance_results, LOW_MOVEMENT_BOUND, movements_data)
+longest_stretch_no_movement_results, stretch_timestamps, stretch_durations = longest_stretch_no_movement(velocity_results, LOW_MOVEMENT_BOUND, movements_data)
 
 # Turn the results into a DataFrame
 longest_stretch_df = pd.DataFrame({
